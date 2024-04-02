@@ -5,7 +5,7 @@ import countries from '../assets/countries.json';
 
 import 'mapbox-gl/dist/mapbox-gl.css';
 
-mapboxgl.accessToken = import.meta.env.MAPBOX_API;
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_API;
 
 const countryToCoords = (countryName) => {
   return countries.data.find(({ country }) => country.toLowerCase() === countryName.toLowerCase());
