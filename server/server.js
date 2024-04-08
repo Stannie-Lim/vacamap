@@ -11,6 +11,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use('/api/markers', require('./routes/markers'));
+
 app.post("/api/auth/register", async (req, res, next) => {
   const { username, password } = req.body;
 

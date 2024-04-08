@@ -29,7 +29,7 @@ export const ControlPanel = ({ selectedCountry }) => {
       </Grid>
       <Grid container item>
         {images.map(image => (
-          <Grid item xs={12}>
+          <Grid item xs={12} key={image}>
             <img src={image} width="100%" />
           </Grid>
         ))}

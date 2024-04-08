@@ -7,6 +7,8 @@ import Mapbox, {
   ScaleControl,
   Popup,
 } from 'react-map-gl';
+import axios from 'axios';
+import { v4 } from "uuid";
 
 import countries from '../assets/countries.json';
 import borders from '../assets/borders.json';
@@ -31,14 +33,38 @@ export const Map = () => {
   const [markers, setMarkers] = useState([]);
   const previousMarkers = usePrevious(markers);
 
-  const addMarker = ({ lat, lng }) => {
-    const newMarker = { id: markers.length, lat, lng };
-    setMarkers([...markers, newMarker]);
-    setSelectedMarker(null);
+  const addMarker = async ({ lat, lng }) => {
+    const id = v4();
+    try {
+      const newMarker = { id, lat, lng };
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/markers`;
+      setSelectedMarker(null);
+
+      const { data } = await axios.post(url, newMarker);
+
+      setMarkers([...markers, data]);
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   useEffect(() => {
-    if (markers.length > previousMarkers?.length) {
+    const getMarkers = async () => {
+      try {
+        const url = `${import.meta.env.VITE_BACKEND_URL}/api/markers`;
+        const { data } = await axios.get(url);
+
+        setMarkers(data)
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
+    getMarkers();
+  }, []);
+
+  useEffect(() => {
+    if (previousMarkers?.length !== 0 && markers.length > 0 && markers.length > previousMarkers?.length) {
       setSelectedMarker(markers[markers.length - 1]);
     }
   }, [previousMarkers, markers]);
@@ -142,9 +168,29 @@ export const Map = () => {
     setSelectedMarker(marker);
   };
 
-  const removeMarker = id => {
-    setMarkers(markers.filter(marker => marker.id !== id))
-    setSelectedMarker(null);
+  const removeMarker = async id => {
+    try {
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/markers/${id}`;
+      await axios.delete(url);
+      setMarkers(markers.filter(marker => marker.id !== id))
+      setSelectedMarker(null);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const uploadImage = (image, marker) => {
+    const reader = new FileReader();
+
+    reader.onload = async function () {
+      const base64String = reader.result.replace("data:", "")
+        .replace(/^.+,/, "");
+
+      await axios.post(`${import.meta.env.VITE_BACKEND_URL}/api/markers/${marker.id}/image`, {
+        base64String
+      });
+    }
+    reader.readAsDataURL(image);
   };
 
   return (
@@ -192,7 +238,7 @@ export const Map = () => {
             latitude={Number(selectedMarker.lat)}
             onClose={() => setSelectedMarker(null)}
           >
-            <PopupContent />
+            <PopupContent uploadImage={(image) => uploadImage(image, selectedMarker)} />
             <Button onClick={() => removeMarker(selectedMarker.id)}>Remove marker</Button>
           </Popup>
         )}

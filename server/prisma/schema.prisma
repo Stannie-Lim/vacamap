@@ -10,16 +10,26 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Users {
-  id       Int       @id @default(autoincrement())
-  username String    @unique
+model users {
+  id       String @id @default(uuid())
+  username String @unique
   password String
-  pokemon  Pokemon[]
+  // marker   marker[]
 }
 
-model Pokemon {
-  id      Int    @id @default(autoincrement())
-  name    String
-  ownerId Int
-  user    Users  @relation(fields: [ownerId], references: [id])
+model photo {
+  id          String @id @default(uuid())
+  name        String
+  markerID    String
+  marker      marker @relation(fields: [markerID], references: [id])
+  base64Photo String
+}
+
+model marker {
+  id     String  @id
+  lat    Decimal
+  lng    Decimal
+  // ownerID String
+  // owner   users   @relation(fields: [ownerID], references: [id])
+  photos photo[]
 }
